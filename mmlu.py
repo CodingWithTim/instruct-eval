@@ -206,7 +206,7 @@ def main(data_dir: str = "data/mmlu", ntrain: int = 5, **kwargs):
         all_cors.append(cors)
 
         test_df["Model Answer"] = preds
-        test_df.to_csv(os.path.join("llama13b", subject + "_llama13b.csv"), index=False, header=False)
+        test_df.to_csv(os.path.join("llama7b", subject + "_llama7b.csv"), index=False, header=False)
 
 
     for subcat in subcat_cors:
