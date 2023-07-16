@@ -136,6 +136,7 @@ def gen_prompt(train_df, subject, k=-1):
 def evaluate(args, subject, model: EvalModel, dev_df, test_df):
     cors = []
     all_probs = []
+    preds = []
 
     for i in range(test_df.shape[0]):
         # get prompt and make sure it fits
@@ -155,6 +156,7 @@ def evaluate(args, subject, model: EvalModel, dev_df, test_df):
         cor = pred.strip().startswith(label)
         cors.append(cor)
         all_probs.append(probs)
+        preds.append(pred.strip()[0])
 
     acc = np.mean(cors)
     cors = np.array(cors)
@@ -162,7 +164,7 @@ def evaluate(args, subject, model: EvalModel, dev_df, test_df):
     all_probs = np.array(all_probs)
     print("Average accuracy {:.3f} - {}".format(acc, subject))
 
-    return cors, acc, all_probs
+    return cors, acc, all_probs, preds
 
 
 def main(data_dir: str = "data/mmlu", ntrain: int = 5, **kwargs):
@@ -194,7 +196,7 @@ def main(data_dir: str = "data/mmlu", ntrain: int = 5, **kwargs):
             os.path.join(args.data_dir, "test", subject + "_test.csv"), header=None
         )
 
-        cors, acc, probs = evaluate(args, subject, model, dev_df, test_df)
+        cors, acc, probs, preds = evaluate(args, subject, model, dev_df, test_df)
         subcats = get_subcategories()[subject]
         for subcat in subcats:
             subcat_cors[subcat].append(cors)
@@ -202,6 +204,10 @@ def main(data_dir: str = "data/mmlu", ntrain: int = 5, **kwargs):
                 if subcat in get_categories()[key]:
                     cat_cors[key].append(cors)
         all_cors.append(cors)
+
+        test_df["Model Answer"] = preds
+        test_df.to_csv(os.path.join("llama13b", subject + "_llama13b.csv"), index=False, header=False)
+
 
     for subcat in subcat_cors:
         subcat_acc = np.mean(np.concatenate(subcat_cors[subcat]))
